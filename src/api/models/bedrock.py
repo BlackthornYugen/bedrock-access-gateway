@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 import re
+import os
 import time
 from abc import ABC
 from typing import AsyncIterable, Iterable, Literal
@@ -100,6 +101,12 @@ def list_bedrock_models() -> dict:
 
             # currently, use this to filter out rerank models and legacy models
             if not stream_supported or status not in ["ACTIVE", "LEGACY"]:
+                continue
+            
+            if re.match(rf"{os.getenv('MODEL_BLOCKLIST_REGEX', '^$')}", model_id):
+                continue
+
+            if not re.match(rf"{os.getenv('MODEL_ALLOWLIST_REGEX', '.*')}", model_id):
                 continue
 
             inference_types = model.get("inferenceTypesSupported", [])
